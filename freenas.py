@@ -56,8 +56,4 @@ class Freenas(object):
     def get_users(self):
         return self.request('user')
 
-#z=Freenas(hostname, auth)
-#b = z.get_users()
-#for i in b:
-#   if i['username'] == 'api':
-#        print(i['id'])
+
