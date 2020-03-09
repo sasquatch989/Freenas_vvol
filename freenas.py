@@ -5,7 +5,7 @@ import json
 import uuid
 import getpass
 
-hostname = '171.20.20.2'
+hostname = '172.20.20.2'
 
 
 def auth_conf():
@@ -44,6 +44,7 @@ class Freenas(object):
 
     def create_zvol(self, size):
         """Takes an integer to set volume size in GBs, returns a uuid string"""
+        print('creating zvol')
         self.request('pool/dataset',
                      method='POST', data={'type': 'VOLUME',
                                           'name': 'Vol1/name-'+self._uuid, 'volsize': size*1073741824})
