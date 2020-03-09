@@ -3,13 +3,14 @@ import os
 import requests
 import json
 import uuid
+import getpass
 
 hostname = '171.20.20.2'
 
 
 def auth_conf():
     if not os.environ.get('FREENAS_API_PW'):
-        os.environ['FREENAS_API_PW'] = str(input('Key not set.  Please enter root password or token: '))
+        os.environ['FREENAS_API_PW'] = str(getpass.getpass('Key not set.  Please enter root password or token: '))
     return 'root', os.environ.get('FREENAS_API_PW')
 
 
@@ -41,7 +42,7 @@ class Freenas(object):
                 return r.text
         raise ValueError(r)
 
-    def create_zvol(self, **kwargs):
+    def create_zvol(self, size):
         """Takes an integer to set volume size in GBs, returns a uuid string"""
         self.request('pool/dataset',
                      method='POST', data={'type': 'VOLUME',
