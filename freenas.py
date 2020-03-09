@@ -1,11 +1,17 @@
 
-import sys
+import os
 import requests
 import json
 import uuid
 
-hostname = '172.20.20.2'
-auth=('root', 'asdf;lkj:LKJ')
+hostname = '171.20.20.2'
+
+
+def auth_conf():
+    if not os.environ.get('FREENAS_API_PW'):
+        os.environ['FREENAS_API_PW'] = str(input('Key not set.  Please enter root password or token: '))
+    return 'root', os.environ.get('FREENAS_API_PW')
+
 
 class Freenas(object):
     def __init__(self, hostname, auth):
@@ -24,7 +30,9 @@ class Freenas(object):
         if data is None:
             data = {}
 
-        r = requests.request(method, '{}{}'.format(self._ep, resource), data=json.dumps(data), headers={'Content-Type': "application/json"}, auth=(self._user, self._secret))
+        r = requests.request(method, '{}{}'.format(self._ep, resource),
+                             data=json.dumps(data), headers={'Content-Type': "application/json"},
+                             auth=(self._user, self._secret))
 
         if r.ok:
             try:
@@ -33,22 +41,29 @@ class Freenas(object):
                 return r.text
         raise ValueError(r)
 
-    def create_zvol(self):
-        """Takes a volume size in GBs and returns a uuid"""
-        self.request('pool/dataset', method='POST', data={'type': 'VOLUME', 'name': 'Vol1/name-'+self._uuid, 'volsize': 10485760000})
+    def create_zvol(self, **kwargs):
+        """Takes an integer to set volume size in GBs, returns a uuid string"""
+        self.request('pool/dataset',
+                     method='POST', data={'type': 'VOLUME',
+                                          'name': 'Vol1/name-'+self._uuid, 'volsize': size*1073741824})
         print('Creating zvol {}'.format(self._uuid))
         return self._uuid
 
     def create_target(self):
-        tgt = self.request('iscsi/target', method='POST', data={'name': 'tgt-'+self._uuid, 'groups': [{'portal': 1, 'initiator': 1}]})
+        tgt = self.request('iscsi/target',
+                           method='POST', data={'name': 'tgt-'+self._uuid,
+                                                'groups': [{'portal': 1, 'initiator': 1}]})
         return tgt['id']
 
     def create_extent(self):
-        ext = self.request('iscsi/extent', method='POST', data={'name': 'ext-'+self._uuid, 'type': 'DISK', 'disk': 'zvol/Vol1/name-'+self._uuid, 'enabled': True})
+        ext = self.request('iscsi/extent',
+                           method='POST', data={'name': 'ext-'+self._uuid,
+                                                'type': 'DISK', 'disk': 'zvol/Vol1/name-'+self._uuid, 'enabled': True})
         return ext['id']
 
     def assoc_target(self, tgt_id, ext_id):
-        self.request('iscsi/targetextent', method='POST', data={'extent': ext_id, 'target': tgt_id})
+        self.request('iscsi/targetextent',
+                     method='POST', data={'extent': ext_id, 'target': tgt_id})
 
     def get_assoc_target(self):
         return self.request('iscsi/targetextent')

@@ -1,8 +1,15 @@
 import unittest
-from freenas import Freenas
+import freenas
+import os
 
-a = Freenas('172.20.20.2', 'root', 'asdf;lkj:LKJ')
+auth = freenas.auth_conf()
+a = freenas.Freenas('172.20.20.2', auth)
+
 class TestFreenas(unittest.TestCase):
-    def test_get_iscsi_assoc_targets(self):
+    def test_auth_success(self):
         '''Test for auth success'''
-        self.assertEqual(a.request('iscsi/targetextent'), 'ok')
+        self.assertEqual(a.request('auth/check_user',
+                                   method='POST', data={'username': 'root',
+                                                        'password': auth[1]
+                                                        }
+                                   ), True)
