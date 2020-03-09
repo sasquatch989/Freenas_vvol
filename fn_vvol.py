@@ -1,3 +1,4 @@
+"""Usage: python fn_vvol --size <> :"""
 import freenas
 import argparse
 
@@ -11,6 +12,7 @@ args = argparser.parse_args()
 
 
 def main():
+    """Workflow, new vm get new dataset, volumes created, dataset_name = vm_name"""
     auth = freenas.auth_conf()
     api = freenas.Freenas(freenas.hostname, auth)
     api.create_zvol(int(args.size))

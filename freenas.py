@@ -52,18 +52,21 @@ class Freenas(object):
         return self._uuid
 
     def create_target(self):
+        """Takes no argument, returns an integer of the target id"""
         tgt = self.request('iscsi/target',
                            method='POST', data={'name': 'tgt-'+self._uuid,
                                                 'groups': [{'portal': 1, 'initiator': 1}]})
         return tgt['id']
 
     def create_extent(self):
+        """Takes no argument, returns an integer of the extent id"""
         ext = self.request('iscsi/extent',
                            method='POST', data={'name': 'ext-'+self._uuid,
                                                 'type': 'DISK', 'disk': 'zvol/Vol1/name-'+self._uuid, 'enabled': True})
         return ext['id']
 
     def assoc_target(self, tgt_id, ext_id):
+        """Takes two integer arguments and returns nothing"""
         self.request('iscsi/targetextent',
                      method='POST', data={'extent': ext_id, 'target': tgt_id})
 
