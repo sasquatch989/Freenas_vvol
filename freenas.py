@@ -8,17 +8,12 @@ import getpass
 hostname = '172.20.20.2'
 
 
-def auth_conf():
-    if not os.environ.get('FREENAS_API_PW'):
-        os.environ['FREENAS_API_PW'] = str(getpass.getpass('Key not set.  Please enter root password or token: '))
-    return 'root', os.environ.get('FREENAS_API_PW')
-
-
 class Freenas(object):
-    def __init__(self, hostname, auth):
+    def __init__(self, hostname):
+        self._auth = self.auth_conf()
         self._hostname = hostname
-        self._user = auth[0]
-        self._secret = auth[1]
+        self._user = self._auth[0]
+        self._secret = self._auth[1]
         self._ep = 'http://{}/api/v2.0/'.format(self._hostname)
         self._uuid = str(uuid.uuid4())
 
@@ -35,12 +30,37 @@ class Freenas(object):
                              data=json.dumps(data), headers={'Content-Type': "application/json"},
                              auth=(self._user, self._secret))
 
-        if r.ok:
-            try:
-                return r.json()
-            except:
-                return r.text
+        if r.ok == True:
+            return r.json()
+
+        if r.status_code == 401:
+            return r.status_code #Change to func retry
+
         raise ValueError(r)
+
+        #return r
+        #if r.status_code == 401:
+        #   return r.status_code
+
+
+        #if r.ok:
+        #    try:
+        #        return r.json()
+        #    except:
+        #        if r.reason == 'Unauthorized':
+        #            print('oh snap, check passwd')
+        #        return r.text
+        #raise ValueError(r)
+
+
+
+    @classmethod
+    def auth_conf(self):
+        """Checks for env var, presents prompt for password if None, returns tuple with 2 objects"""
+        if not os.environ.get('FREENAS_API_PW'):
+            os.environ['FREENAS_API_PW'] = str(getpass.getpass('Key not set.  Please enter root password: '))
+        return 'root', os.environ.get('FREENAS_API_PW')
+
 
     def create_zvol(self, size):
         """Takes an integer to set volume size in GBs, returns a uuid string"""
@@ -54,15 +74,15 @@ class Freenas(object):
     def create_target(self):
         """Takes no argument, returns an integer of the target id"""
         tgt = self.request('iscsi/target',
-                           method='POST', data={'name': 'tgt-'+self._uuid,
+                           method='POST', data={'name': self._uuid,
                                                 'groups': [{'portal': 1, 'initiator': 1}]})
         return tgt['id']
 
     def create_extent(self):
         """Takes no argument, returns an integer of the extent id"""
         ext = self.request('iscsi/extent',
-                           method='POST', data={'name': 'ext-'+self._uuid,
-                                                'type': 'DISK', 'disk': 'zvol/Vol1/name-'+self._uuid, 'enabled': True})
+                           method='POST', data={'name': self._uuid, 'type': 'DISK',
+                                                'disk': 'zvol/Vol1/'+self._uuid, 'enabled': True})
         return ext['id']
 
     def assoc_target(self, tgt_id, ext_id):
