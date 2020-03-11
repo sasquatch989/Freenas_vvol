@@ -38,21 +38,6 @@ class Freenas(object):
 
         raise ValueError(r)
 
-        #return r
-        #if r.status_code == 401:
-        #   return r.status_code
-
-
-        #if r.ok:
-        #    try:
-        #        return r.json()
-        #    except:
-        #        if r.reason == 'Unauthorized':
-        #            print('oh snap, check passwd')
-        #        return r.text
-        #raise ValueError(r)
-
-
 
     @classmethod
     def auth_conf(self):
@@ -97,3 +82,13 @@ class Freenas(object):
         return self.request('user')
 
 
+class DeleteAll():
+    pass
+
+
+class AuthGateway():
+    pass
+
+
+class GetMethods():
+    pass
